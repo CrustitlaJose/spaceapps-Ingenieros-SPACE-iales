@@ -1,0 +1,47 @@
+/* AstroVital · base: color tokens, typography, page */
+
+/* Layout: a spacecraft crew-tablet console. Summary (triage) first, then body map + zone detail, tabs for deeper views. Single deliberate dark "flight display" theme in the team's navy + teal. */
+:root{
+  color-scheme: dark;
+  --bg:#0b0e22;
+  --panel:#131838;
+  --panel2:#1a2047;
+  --line:#2b3366;
+  --fg:#e9ecff;
+  --muted:#939bc9;
+  --accent:#4fc1c0;
+  --accent-ink:#06201f;
+  --ok:#3ecf8e;
+  --warn:#f5b83d;
+  --bad:#ff5c6c;
+  --ok-bg:rgba(62,207,142,.12);
+  --warn-bg:rgba(245,184,61,.13);
+  --bad-bg:rgba(255,92,108,.14);
+  --f-display:"Chakra Petch", "Segoe UI", system-ui, sans-serif;
+  --f-body:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, "Cascadia Mono", Menlo, monospace;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{background:var(--bg);color:var(--fg)}
+body{font-family:var(--f-body);font-size:15px;line-height:1.5;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));
+  padding-right:max(16px, env(safe-area-inset-right, 0px));
+  padding-block:16px 32px;
+  background-image:radial-gradient(1px 1px at 20% 30%, rgba(233,236,255,.35) 50%, transparent 51%),
+    radial-gradient(1px 1px at 70% 10%, rgba(233,236,255,.25) 50%, transparent 51%),
+    radial-gradient(1px 1px at 85% 60%, rgba(233,236,255,.2) 50%, transparent 51%),
+    radial-gradient(1px 1px at 40% 80%, rgba(233,236,255,.2) 50%, transparent 51%);
+  background-size:340px 340px;
+}
+.app{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;letter-spacing:.01em}
+h2{font-size:1.15rem}
+h3{font-size:1rem}
+p{margin:0}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.label{font-size:.72rem;text-transform:uppercase;letter-spacing:.09em;color:var(--muted)}
+
