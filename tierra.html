@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AstroVital · Control Tierra</title>
+<meta name="description" content="AstroVital: consola de cirujanos de vuelo en la Tierra.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/screens.css">
+<script type="module" src="js/tierra.js"></script>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true">
+        <circle cx="22" cy="22" r="20" fill="none" stroke="#4fc1c0" stroke-width="2"/>
+        <circle cx="22" cy="22" r="9" fill="none" stroke="#e9ecff" stroke-width="2"/>
+        <path d="M13 22h18M22 13c4 4 4 14 0 18M22 13c-4 4-4 14 0 18" fill="none" stroke="#e9ecff" stroke-width="1.5"/>
+        <circle cx="36" cy="10" r="3" fill="#4fc1c0"/>
+      </svg>
+      <div>
+        <h1>Astro<span>Vital</span></h1>
+        <div class="sub" data-i18n="earthSub"></div>
+      </div>
+    </div>
+    <div class="controls">
+      <a class="btn small" href="index.html" target="_blank" rel="noopener" data-i18n="openShip" style="color:inherit;text-decoration:none"></a>
+      <div class="seg" role="group" aria-label="Language" id="langSeg">
+        <button type="button" data-lang="es">ES</button>
+        <button type="button" data-lang="en">EN</button>
+      </div>
+    </div>
+  </header>
+
+  <section class="strip" aria-label="Link status">
+    <div><span class="label" data-i18n="crew"></span><span class="v">CDR-1 · M. Rivera</span></div>
+    <div><span class="label">Misión / Mission</span><span class="v" id="eMission"></span></div>
+    <div><span class="label" data-i18n="delay"></span><span class="v" id="eDelay"></span></div>
+    <div><span class="label" data-i18n="linkShip"></span><span class="linkstate" id="eLink" data-up="true"></span></div>
+    <div><span class="label" data-i18n="inTransitToEarth"></span><span class="v" id="eTransit">0</span></div>
+    <div><button type="button" class="btn small" id="eToggle"></button></div>
+  </section>
+
+  <main class="earth-grid">
+    <div class="stack">
+      <div class="card stack">
+        <h2 data-i18n="reports"></h2>
+        <ul class="msgs" id="reports"></ul>
+      </div>
+      <div class="card stack">
+        <h3 data-i18n="inTransitToEarth"></h3>
+        <ul class="msgs" id="pending"></ul>
+      </div>
+    </div>
+    <div class="stack">
+      <div class="card zd" id="detail"></div>
+      <div class="card stack">
+        <h2 data-i18n="reply"></h2>
+        <div class="quick" id="quick"></div>
+        <label class="label" for="replyText" data-i18n="reply"></label>
+        <textarea class="reply" id="replyText"></textarea>
+        <div class="row">
+          <button type="button" class="btn primary" id="replyBtn" data-i18n="sendReply"></button>
+          <span class="err" id="replyErr" role="alert"></span>
+        </div>
+      </div>
+      <div class="card stack">
+        <h3 data-i18n="sentToShip"></h3>
+        <ul class="msgs" id="sentToShip"></ul>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <span data-i18n="footer"></span>
+    <span>Ingenieros SPACE-iales · TecNM Zacatepec</span>
+  </footer>
+</div>
+<div class="toast" id="toast" hidden></div>
+</body>
+</html>
