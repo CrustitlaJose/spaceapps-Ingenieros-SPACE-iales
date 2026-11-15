@@ -1,61 +1,25 @@
 // AstroVital · SensorSimulator (Model layer).
-// Generates realistic simulated data, the way an ARCHeR-style wearable (Artemis II) would provide it.
-
-/** Deterministic random generator so each demo scenario always looks the same. */
-function seeded(seed) {
-  return function () {
-    seed |= 0; seed = (seed + 0x6d2b79f5) | 0;
-    let x = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-    x = (x + Math.imul(x ^ (x >>> 7), 61 | x)) ^ x;
-    return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
-  };
-}
+// The virtual wristband: the ONLY simulated data source in the app, always shown as "Simulado".
+// It stands in for an ARCHeR-style wearable (Artemis II) until real sensors are connected.
 
 /**
- * 30 days of history for a demo scenario.
- * steady: normal values · hidden: slow drift (BP and HR up, sleep, mood and exercise down) · emergency: hidden + a critical last day.
- * Returns flat day records: { day, sleep, mood, sys, dia, hr, glu, temp, spo2, ex, sym, solar, src }.
+ * One reading of the virtual wristband.
+ * Day-to-day values follow a mean-reverting random walk: they move around the person's usual value
+ * (pulled halfway back each day) with natural variation, so every reading is different but realistic.
  */
-export function generateHistory(scenario, days = 30) {
-  const r = seeded(scenario === "steady" ? 7 : scenario === "hidden" ? 42 : 99);
-  const n = (s) => (r() + r() + r() - 1.5) * s * 1.15;
-  const drift = scenario === "steady" ? 0 : 1;
-  const out = [];
-  for (let d = 1; d <= days; d++) {
-    const p = d / days, late = Math.max(0, (d - 20) / 10);
-    const rec = {
-      day: d,
-      sleep: +((scenario === "steady" ? 7.8 : 7.6) - 1.3 * late * drift + n(0.35)).toFixed(1),
-      mood: Math.max(1, Math.min(5, Math.round(4.4 - 1.4 * late * drift + n(0.35)))),
-      sys: Math.round(113 + 15 * p * drift + n(3)),
-      dia: Math.round(72 + 6 * p * drift + n(2)),
-      hr: Math.round(62 + 11 * p * drift + n(2)),
-      glu: Math.round(88 + 5 * p * drift + n(4)),
-      temp: +(36.6 + n(0.15)).toFixed(1),
-      spo2: Math.min(100, Math.round(98 + n(0.7))),
-      ex: Math.max(0, Math.round(108 - 58 * late * drift + n(8))),
-      sym: {}, solar: false, src: "sim",
-    };
-    if (scenario === "emergency" && d === days) {
-      Object.assign(rec, { sys: 154, dia: 97, hr: 114, temp: 38.4, spo2: 91, sleep: 4.6, mood: 2, glu: 131,
-        sym: { head: true, vision: true, nausea: true }, solar: true });
-    }
-    out.push(rec);
-  }
-  return out;
-}
+export const BASELINE = { sleep: 7.5, sys: 114, dia: 72, hr: 64, glu: 88, temp: 36.6, spo2: 98, ex: 108 };
+const DAILY_SD = { sys: 5, dia: 3, hr: 4, glu: 5, temp: 0.2, spo2: 0.8, ex: 9, sleep: 0.6 };
+const LIMITS = { sys: [95, 160], dia: [55, 100], hr: [48, 115], glu: [65, 140], temp: [35.9, 38.2], spo2: [93, 100], ex: [0, 150], sleep: [4, 9.5] };
+const gauss = () => { let u = 0, v = 0; while (!u) u = Math.random(); while (!v) v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
 
-/** One wearable reading based on the last record, with small natural variation. */
 export function readWearable(last) {
-  const j = (v, s, dec) => +(v + (Math.random() - 0.5) * 2 * s).toFixed(dec);
-  return {
-    sleep: j(last.sleep, 0.4, 1),
-    sys: Math.round(j(last.sys, 3, 0)),
-    dia: Math.round(j(last.dia, 2, 0)),
-    hr: Math.round(j(last.hr, 2, 0)),
-    glu: Math.round(j(last.glu, 4, 0)),
-    temp: j(last.temp, 0.15, 1),
-    spo2: Math.min(100, Math.round(j(last.spo2, 1, 0))),
-    ex: Math.max(0, Math.round(j(last.ex, 10, 0))),
-  };
+  const out = {};
+  for (const k of Object.keys(BASELINE)) {
+    const prev = last && last[k] != null ? last[k] : BASELINE[k];
+    let v = prev + 0.5 * (BASELINE[k] - prev) + DAILY_SD[k] * gauss();
+    v = Math.min(LIMITS[k][1], Math.max(LIMITS[k][0], v));
+    out[k] = k === "temp" || k === "sleep" ? +v.toFixed(1) : Math.round(v);
+  }
+  out.readAt = new Date().toISOString();
+  return out;
 }

@@ -5,12 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>AstroVital · Nave</title>
 <meta name="description" content="AstroVital: monitoreo de salud para astronautas. App de la nave.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+<link rel="preload" href="assets/fonts/archivo-latin.woff2" as="font" type="font/woff2" crossorigin>
+<script type="importmap">{"imports":{"three":"./js/vendor/three.module.min.js"}}</script>
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/components.css">
 <link rel="stylesheet" href="css/screens.css">
+<link rel="stylesheet" href="css/theme.css">
 <script type="module" src="js/nave.js"></script>
 </head>
 <body>
@@ -18,9 +19,9 @@
   <header class="top">
     <div class="brand">
       <svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true">
-        <circle cx="22" cy="22" r="20" fill="none" stroke="#4fc1c0" stroke-width="2"/>
+        <circle cx="22" cy="22" r="20" fill="none" stroke="#F2F4F8" stroke-width="2"/>
         <path d="M6 24h8l3-8 5 15 4-11 2 4h10" fill="none" stroke="#e9ecff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
-        <circle cx="36" cy="10" r="3" fill="#4fc1c0"/>
+        <circle cx="36" cy="10" r="3" fill="#F2F4F8"/>
       </svg>
       <div>
         <h1>Astro<span>Vital</span></h1>
@@ -28,6 +29,7 @@
       </div>
     </div>
     <div class="controls">
+      <label class="crewpick"><span class="label" data-i18n="crew"></span><select id="crewSel"></select></label>
       <div class="seg" role="group" aria-label="Mission" id="missionSeg"></div>
       <div class="seg" role="group" aria-label="Language" id="langSeg">
         <button type="button" data-lang="es">ES</button>
@@ -36,94 +38,150 @@
     </div>
   </header>
 
-  <section class="strip" aria-label="Mission status">
-    <div><span class="label" data-i18n="crew"></span><span class="v">CDR-1 · M. Rivera</span></div>
-    <div><span class="label" data-i18n="missionDay"></span><span class="v" id="sDay"></span></div>
-    <div><span class="label" data-i18n="gravity"></span><span class="v" id="sGrav"></span></div>
-    <div><span class="label" data-i18n="delay"></span><span class="v" id="sDelay"></span></div>
-    <div><span class="label" data-i18n="scenario"></span>
-      <select id="scenario" aria-label="Scenario"></select>
-    </div>
-    <div><span class="label" data-i18n="link"></span><span class="linkstate" id="sLink" data-up="true"></span><span class="sim" data-i18n="simulated"></span></div>
-  </section>
+  <div class="telemetry" id="telemetry" aria-label="Mission status"></div>
 
-  <nav class="tabs" role="tablist" id="tabs"></nav>
+  <div class="navbar">
+    <nav class="tabs" role="tablist" id="tabs"></nav>
+    <button type="button" class="btn emg-btn" id="emgBtn"><span aria-hidden="true">🆘</span> <span data-i18n="emgBtn"></span></button>
+  </div>
 
   <main>
-    <!-- PANEL -->
+    <!-- TODAY (home) -->
     <section id="v-panel" class="stack" role="tabpanel">
-      <div class="triage" id="triage"></div>
-      <div class="grid2">
-        <div class="card bodymap">
-          <div class="row" style="justify-content:space-between">
-            <h2 data-i18n="bodyTitle"></h2>
-            <span class="note" data-i18n="tapZone"></span>
-          </div>
-          <svg viewBox="0 0 520 560" role="img" aria-labelledby="figTitle" id="figure">
-            <title id="figTitle">Astronaut body map</title>
-            <ellipse class="aura" id="aura" cx="260" cy="285" rx="150" ry="268"/>
-            <!-- figure -->
-            <rect class="fig" x="166" y="140" width="36" height="140" rx="18"/>
-            <rect class="fig" x="318" y="140" width="36" height="140" rx="18"/>
-            <circle class="fig" cx="184" cy="292" r="17"/>
-            <circle class="fig" cx="336" cy="292" r="17"/>
-            <rect class="fig" x="207" y="292" width="48" height="190" rx="20"/>
-            <rect class="fig" x="265" y="292" width="48" height="190" rx="20"/>
-            <rect class="fig" x="200" y="472" width="58" height="32" rx="12"/>
-            <rect class="fig" x="262" y="472" width="58" height="32" rx="12"/>
-            <rect class="fig" x="198" y="128" width="124" height="176" rx="30"/>
-            <rect x="236" y="168" width="48" height="34" rx="6" fill="#0f1330" stroke="#2b3366" stroke-width="2"/>
-            <circle cx="248" cy="185" r="4" fill="#ff5c6c"/><circle cx="260" cy="185" r="4" fill="#f5b83d"/><circle cx="272" cy="185" r="4" fill="#3ecf8e"/>
-            <rect x="198" y="282" width="124" height="14" rx="6" fill="#2b3366"/>
-            <circle class="fig" cx="260" cy="76" r="52"/>
-            <ellipse class="visor" cx="268" cy="82" rx="34" ry="24"/>
-            <path d="M246 72 q10 -10 24 -6" stroke="rgba(233,236,255,.35)" stroke-width="3" fill="none" stroke-linecap="round"/>
-            <g id="hots"></g>
-          </svg>
-          <div class="zone-chips" id="chips"></div>
-        </div>
-        <div class="card zd" id="zone"></div>
+      <div class="hero" id="hero" data-l="none">
+        <div class="planet" id="planet" aria-hidden="true"></div>
+        <div class="astro" id="astro"></div>
+        <div class="hero-body" id="heroBody"></div>
+      </div>
+      <div class="weather" id="weather" aria-live="polite"></div>
+      <div class="card stack">
+        <div class="row" style="justify-content:space-between"><h2 data-i18n="planTitle"></h2><span class="note streak" id="streak"></span></div>
+        <ul class="plan" id="plan"></ul>
       </div>
     </section>
 
-    <!-- CHECK-IN -->
-    <section id="v-checkin" class="card stack" role="tabpanel" hidden>
-      <div>
+    <!-- CHECK-UP -->
+    <section id="v-checkin" class="stack" role="tabpanel" hidden>
+      <div class="wiz-head">
         <h2 data-i18n="ciTitle"></h2>
-        <p class="note" data-i18n="ciSub" style="margin-top:4px"></p>
+        <ol class="stepper" id="stepper"></ol>
       </div>
-      <form class="ci" id="ciForm" novalidate>
-        <div class="row">
-          <button type="button" class="btn small" id="syncBtn" data-i18n="sync"></button>
-          <span class="note" data-i18n="syncNote"></span>
+      <div class="whoami" id="ciWho"></div>
+      <form class="stack" id="ciForm" novalidate>
+
+        <!-- 0. Who are you? -->
+        <div class="card stack step" data-step="0">
+          <div class="start" id="ciStart"></div>
+          <div class="stack" id="ciPicker">
+            <div class="step-head"><div><h3 data-i18n="pickTitle"></h3><p class="note" data-i18n="pickSub"></p></div></div>
+            <div class="pick-grid" id="pickGrid"></div>
+            <div class="row"><button type="button" class="btn" data-tab="crew" data-add-crew="1" data-i18n="addCrew"></button></div>
+          </div>
         </div>
-        <div class="fgrid">
-          <div class="field"><label for="f-sleep" data-i18n="fSleep"></label><input id="f-sleep" type="number" step="0.1" min="0" max="16" inputmode="decimal"><span class="hint">h</span></div>
-          <div class="field"><label for="f-sys" data-i18n="fSys"></label><input id="f-sys" type="number" min="60" max="250" inputmode="numeric"><span class="hint">mmHg</span></div>
-          <div class="field"><label for="f-dia" data-i18n="fDia"></label><input id="f-dia" type="number" min="30" max="160" inputmode="numeric"><span class="hint">mmHg</span></div>
-          <div class="field"><label for="f-hr" data-i18n="fHr"></label><input id="f-hr" type="number" min="25" max="220" inputmode="numeric"><span class="hint" data-i18n="bpm"></span></div>
-          <div class="field"><label for="f-glu" data-i18n="fGlu"></label><input id="f-glu" type="number" min="20" max="600" inputmode="numeric"><span class="hint">mg/dL</span></div>
-          <div class="field"><label for="f-temp" data-i18n="fTemp"></label><input id="f-temp" type="number" step="0.1" min="33" max="43" inputmode="decimal"><span class="hint">°C</span></div>
-          <div class="field"><label for="f-spo2" data-i18n="fSpo2"></label><input id="f-spo2" type="number" min="50" max="100" inputmode="numeric"><span class="hint">%</span></div>
-          <div class="field"><label for="f-ex" data-i18n="fEx"></label><input id="f-ex" type="number" min="0" max="400" inputmode="numeric"><span class="hint">min</span></div>
+
+        <!-- 1. Pulse with the camera -->
+        <div class="card stack step" data-step="1">
+          <div class="step-head"><span class="step-n">2</span><div><h3 data-i18n="camTitle"></h3><p class="note" data-i18n="camSub"></p></div><span class="src-tag" data-src="camera" data-i18n="srcCamera"></span></div>
+          <div class="cam-wrap" id="camWrap" hidden>
+            <video id="camVideo" playsinline muted></video>
+            <div class="cam-oval" aria-hidden="true"></div>
+            <div class="cam-hud" id="camHud"></div>
+          </div>
+          <div class="bar" id="camBar" hidden><i id="camBarFill" style="width:0%"></i></div>
+          <div id="camResult" class="cam-result" hidden></div>
+          <div class="row">
+            <button type="button" class="btn primary" id="camStart" data-i18n="camStart"></button>
+            <button type="button" class="btn" id="camSkip" data-i18n="camSkip"></button>
+            <button type="button" class="btn" id="camCancel" data-i18n="cancel" hidden></button>
+          </div>
+          <p class="err" id="camErr" role="alert"></p>
+          <details class="help"><summary data-i18n="howMeasure"></summary><p data-i18n="helpCam"></p></details>
         </div>
-        <div class="field">
-          <span class="label" data-i18n="fMood"></span>
-          <div class="moods" id="moods"></div>
+
+        <!-- 2. Virtual wristband (simulated) -->
+        <div class="card stack step" data-step="2">
+          <div class="step-head"><span class="step-n">3</span><div><h3 data-i18n="wearTitle"></h3><p class="note" data-i18n="wearSub"></p></div><span class="src-tag" id="wearTag" data-src="sim"></span></div>
+          <div class="wear-grid" id="wearGrid"></div>
+          <div class="row">
+            <button type="button" class="btn small" id="syncBtn" data-i18n="wearRead"></button>
+            <button type="button" class="btn small" id="manualBtn" data-i18n="wearManual"></button>
+          </div>
         </div>
-        <div class="field">
-          <span class="label" data-i18n="fSym"></span>
-          <div class="checks" id="syms"></div>
+
+        <!-- 3. Reaction test (PVT-B) -->
+        <div class="card stack step" data-step="3">
+          <div class="step-head"><span class="step-n">4</span><div><h3 data-i18n="pvtTitle"></h3><p class="note" data-i18n="pvtSub"></p></div><span class="src-tag" data-src="self" data-i18n="srcReal"></span></div>
+          <div class="pvt-box" id="pvtBox" tabindex="0" role="button" aria-live="polite"></div>
+          <div class="bar" id="pvtBar" hidden><i id="pvtBarFill" style="width:0%"></i></div>
+          <div id="pvtResult" class="pvt-result" hidden></div>
+          <div class="row">
+            <label class="pvt-len"><span class="label" data-i18n="pvtLength"></span>
+              <select id="pvtLen" class="field-select"></select></label>
+            <button type="button" class="btn primary" id="pvtStart" data-i18n="pvtStart"></button>
+            <button type="button" class="btn" id="pvtCancel" data-i18n="pvtCancel" hidden></button>
+            <button type="button" class="btn" id="pvtSkip" data-i18n="pvtSkip"></button>
+          </div>
+          <details class="help"><summary data-i18n="howMeasure"></summary><p data-i18n="helpPvt"></p></details>
         </div>
-        <div class="row">
-          <button type="submit" class="btn primary" data-i18n="save"></button>
+
+        <!-- 4. Your answers -->
+        <div class="card stack step" data-step="4">
+          <div class="step-head"><span class="step-n">5</span><div><h3 data-i18n="ansTitle"></h3><p class="note" data-i18n="ansSub"></p></div><span class="src-tag" data-src="self" data-i18n="srcSelf"></span></div>
+          <div class="field" style="max-width:340px">
+            <label for="f-sleep" data-i18n="fSleep"></label>
+            <div class="row" style="flex-wrap:nowrap">
+              <input id="f-sleep" type="number" step="0.1" min="0" max="16" inputmode="decimal">
+              <button type="button" class="btn small" id="sleepUnknown" aria-pressed="false" data-i18n="dontKnow"></button>
+            </div>
+            <details class="help"><summary data-i18n="howMeasure"></summary><p data-i18n="helpSleep"></p></details>
+          </div>
+          <div class="vas-grid">
+            <div class="field vas" id="vasMoodField">
+              <label for="vas-mood" data-i18n="vasMood"></label>
+              <input id="vas-mood" type="range" min="0" max="100" step="1" value="50">
+              <div class="vas-ends"><span data-i18n="vasMoodLo"></span><output id="vas-mood-out">–</output><span data-i18n="vasMoodHi"></span></div>
+            </div>
+            <div class="field vas" id="vasStressField">
+              <label for="vas-stress" data-i18n="vasStress"></label>
+              <input id="vas-stress" type="range" min="0" max="100" step="1" value="50">
+              <div class="vas-ends"><span data-i18n="vasStressLo"></span><output id="vas-stress-out">–</output><span data-i18n="vasStressHi"></span></div>
+            </div>
+          </div>
+          <details class="help"><summary data-i18n="howMeasure"></summary><p data-i18n="helpVas"></p></details>
+          <div class="pss" id="pssBox"></div>
+          <div class="field">
+            <span class="label" data-i18n="fSym"></span>
+            <div class="checks" id="syms"></div>
+          </div>
+        </div>
+
+        <!-- 5. Result -->
+        <div class="card stack step" data-step="5">
+          <div class="result" id="ciResult"></div>
+        </div>
+
+        <div class="wiz-nav">
+          <button type="button" class="btn" id="wizBack" data-i18n="back"></button>
           <span class="err" id="ciErr" role="alert"></span>
+          <button type="button" class="btn primary" id="wizNext" data-i18n="next"></button>
+          <button type="submit" class="btn primary" id="wizSave" data-i18n="saveSee" hidden></button>
         </div>
       </form>
     </section>
 
     <!-- TRENDS -->
     <section id="v-trends" class="stack" role="tabpanel" hidden>
+      <div class="card stack">
+        <div>
+          <h2 data-i18n="logTitle"></h2>
+          <p class="note" data-i18n="logSub" style="margin-top:4px"></p>
+        </div>
+        <ul class="msgs" id="ciLog"></ul>
+      </div>
+      <div class="card stack">
+        <h2 data-i18n="emgLogTitle"></h2>
+        <ul class="msgs" id="emgLog"></ul>
+      </div>
       <div class="card stack">
         <div>
           <h2 data-i18n="trTitle"></h2>
@@ -138,19 +196,6 @@
           <span class="note" data-i18n="band"></span>
         </div>
         <div class="chartwrap"><svg id="chart" viewBox="0 0 760 300" role="img" aria-label="Trend chart"></svg></div>
-      </div>
-    </section>
-
-    <!-- MISSIONS -->
-    <section id="v-missions" class="stack" role="tabpanel" hidden>
-      <div class="stats" id="gStats"></div>
-      <div class="card stack">
-        <h2 data-i18n="todayMissions"></h2>
-        <ul class="tasks" id="tasks"></ul>
-      </div>
-      <div class="card stack">
-        <h2 data-i18n="badgesTitle"></h2>
-        <div class="badges" id="badges"></div>
       </div>
     </section>
 
@@ -187,30 +232,68 @@
       </div>
     </section>
 
-    <!-- SCIENCE -->
-    <section id="v-science" class="stack" role="tabpanel" hidden>
+    <!-- CREW -->
+    <section id="v-crew" class="stack" role="tabpanel" hidden>
       <div class="card stack">
-        <h2 data-i18n="sciTitle"></h2>
-        <p class="why" data-i18n="sciSub"></p>
-        <div class="hz-grid" id="hzGrid"></div>
+        <div class="row" style="justify-content:space-between">
+          <div>
+            <h2 data-i18n="crewTitle"></h2>
+            <p class="note" data-i18n="crewSub" style="margin-top:4px"></p>
+          </div>
+          <button type="button" class="btn primary small" id="addCrewBtn" data-i18n="addCrew"></button>
+        </div>
+        <ul class="msgs" id="crewList"></ul>
       </div>
+      <form class="card ci" id="crewForm" novalidate hidden>
+        <h2 id="crewFormTitle"></h2>
+        <input type="hidden" id="crew-id">
+        <div class="fgrid">
+          <div class="field"><label for="crew-name" data-i18n="fName"></label><input id="crew-name" type="text" maxlength="40" autocomplete="off" style="font-family:var(--f-body)"></div>
+          <div class="field"><label for="crew-role" data-i18n="fRole"></label><select id="crew-role" class="field-select"></select></div>
+          <div class="field"><label for="crew-age" data-i18n="fAge"></label><input id="crew-age" type="number" inputmode="numeric"><span class="hint" data-i18n="years"></span></div>
+          <div class="field"><label for="crew-weight" data-i18n="fWeight"></label><input id="crew-weight" type="number" step="0.1" inputmode="decimal"><span class="hint">kg</span></div>
+          <div class="field"><label for="crew-height" data-i18n="fHeight"></label><input id="crew-height" type="number" step="any" inputmode="decimal" placeholder="172 o 1.72"><span class="hint">cm</span></div>
+        </div>
+        <div class="field"><label for="crew-notes" data-i18n="fNotes"></label><textarea class="reply" id="crew-notes" maxlength="300" style="min-height:64px"></textarea></div>
+        <div class="row">
+          <button type="submit" class="btn primary" data-i18n="saveCrew"></button>
+          <button type="button" class="btn" id="crewCancelBtn" data-i18n="cancel"></button>
+          <span class="err" id="crewErr" role="alert"></span>
+        </div>
+      </form>
+    </section>
+
+    <!-- SETTINGS: your data -->
+    <section id="v-more" class="stack" role="tabpanel" hidden>
       <div class="card stack">
-        <h2 data-i18n="factsTitle"></h2>
-        <div class="facts" id="facts"></div>
-      </div>
-      <div class="card stack">
-        <h2 data-i18n="refsTitle"></h2>
-        <ol class="refs" id="refs"></ol>
-        <p class="note" data-i18n="disclaimer"></p>
+        <h2 data-i18n="dataTitle"></h2>
+        <p class="note" data-i18n="dataSub"></p>
+        <div class="data-actions">
+          <div class="data-act"><div><strong data-i18n="bkSave"></strong><p class="note" data-i18n="bkSaveSub"></p></div><button type="button" class="btn small" id="bkSave" data-i18n="bkSaveBtn"></button></div>
+          <div class="data-act"><div><strong data-i18n="bkLoad"></strong><p class="note" data-i18n="bkLoadSub"></p></div><label class="btn small" for="bkFile" data-i18n="bkLoadBtn"></label><input type="file" id="bkFile" accept=".json,application/json" hidden></div>
+          <div class="data-act"><div><strong data-i18n="clrMsgs"></strong><p class="note" data-i18n="clrMsgsSub"></p></div><button type="button" class="btn small" id="clearMsgs" data-i18n="clrMsgsBtn"></button></div>
+          <div class="data-act"><div><strong data-i18n="resetAll"></strong><p class="note" data-i18n="resetAllSub"></p></div><button type="button" class="btn small danger" id="resetAll" data-i18n="resetAllBtn"></button></div>
+        </div>
+        <div class="confirm" id="dataConfirm" hidden></div>
       </div>
     </section>
   </main>
 
+  <aside class="drawer" id="detail" aria-labelledby="detailTitle" inert>
+    <div class="drawer-head">
+      <h2 id="detailTitle" data-i18n="detailTitle"></h2>
+      <button type="button" class="btn small" id="hideDetail" data-i18n="hideDetail"></button>
+    </div>
+    <div class="zone-chips" id="chips"></div>
+    <div class="zd" id="zone"></div>
+  </aside>
+
   <footer>
     <span data-i18n="footer"></span>
-    <span>TecNM Zacatepec · Morelos, México · <button type="button" class="btn small" id="clearMsgs" style="padding:2px 8px">Reset link</button></span>
+    <span>Ingenieros SPACE-iales · TecNM Zacatepec · Morelos, México</span>
   </footer>
 </div>
+<div class="emg" id="emg" role="dialog" aria-modal="true" aria-labelledby="emgTitle" hidden><div class="emg-box" id="emgBox"></div></div>
 <div class="toast" id="toast" hidden></div>
 
 

@@ -19,7 +19,8 @@ export class EarthController {
     this.bindEvents();
     this.link.onChange(() => this.refresh());
     await this.refresh();
-    setInterval(async () => { await this.link.tick(); await this.refresh(); }, 500);
+    // Redraw only when something arrived or is still travelling (keeps typing in the reply box smooth).
+    setInterval(async () => { const changed = await this.link.tick(); if (changed || this.busy) await this.refresh(); }, 500);
   }
 
   async refresh() {
@@ -29,23 +30,30 @@ export class EarthController {
     const pending = inbound.filter((m) => m.status === "inTransit" || m.status === "queued");
     if (this.known) {
       const fresh = received.filter((m) => !this.known.has(m._id));
-      if (fresh.length) { toast(document.documentElement.lang === "en" ? "📡 New report from the spacecraft" : "📡 Nuevo reporte de la nave"); if (!this.selected) this.selected = fresh[0]._id; }
+      if (fresh.length) { const emg = fresh.find((m) => m.type === "emergency");
+        toast(emg ? (document.documentElement.lang === "en" ? "🆘 Emergency notice from the spacecraft" : "🆘 Aviso de emergencia de la nave") : (document.documentElement.lang === "en" ? "📡 New report from the spacecraft" : "📡 Nuevo reporte de la nave"));
+        if (emg) { this.selected = emg._id; this.shownId = undefined; } else if (!this.selected) this.selected = fresh[0]._id; }
     }
     this.known = new Set(received.map((m) => m._id));
     if (!this.selected && received.length) this.selected = received[0]._id;
     renderEarthStrip(getMission(), this.link.isUp(), pending.length);
     renderInbox(received, pending, this.selected, now);
     const sel = received.find((m) => m._id === this.selected) || null;
+    this.selectedCrew = sel && sel.payload ? sel.payload.crewId : null;
+    document.getElementById("eCrew").textContent = sel && sel.payload ? `${sel.payload.crewId} · ${sel.payload.crewName}` : "–";
     if (sel && sel._id !== this.shownId) { renderDetail(sel); this.shownId = sel._id; }
     if (!sel && this.shownId !== null) { renderDetail(null); this.shownId = null; }
-    renderSent(await this.link.sent(), now);
+    const sent = await this.link.sent();
+    this.busy = pending.some((m) => m.status === "inTransit") || sent.some((m) => m.status === "inTransit");
+    renderSent(sent, now);
   }
 
   async sendReply() {
     const body = readReply();
     if (!body) { setReplyError(t("emptyReply")); return; }
+    if (!this.selectedCrew) { setReplyError(t("selectReport")); return; }
     setReplyError("");
-    const msg = await this.link.send({ type: "instruction", crewId: "CDR-1", body });
+    const msg = await this.link.send({ type: "instruction", crewId: this.selectedCrew, body });
     clearReply();
     toast(msg.status === "queued" ? t("sentNoSignal") : t("replySent"));
     await this.refresh();

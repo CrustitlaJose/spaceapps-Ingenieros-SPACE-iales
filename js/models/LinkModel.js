@@ -3,7 +3,7 @@
 // Both apps share the on-board database (same origin); BroadcastChannel notifies the other tab instantly.
 // A message is "inTransit" until now >= deliverAt and the link is up; with no signal it waits "queued".
 
-import { MISSIONS } from "../config/missions.js";
+import { linkDelay } from "./DelayModel.js";
 
 const CHANNEL = "astrovital-link";
 const UP_KEY = "astrovital-link-up";
@@ -14,6 +14,7 @@ export function getMission() {
 }
 export function setMission(m) {
   try { localStorage.setItem(MISSION_KEY, m); } catch (e) {}
+  if (typeof window !== "undefined") window.dispatchEvent(new Event("astrovital:mission")); // the space background follows the mission
 }
 
 export class LinkModel {
@@ -34,7 +35,8 @@ export class LinkModel {
     try { return localStorage.getItem(UP_KEY) !== "false"; } catch (e) { return true; }
   }
 
-  delayMs() { return MISSIONS[getMission()].delayMs; }
+  /** Demo delay for the current mission. Mars uses today's real Earth–Mars light time (1 min = 1 s in the demo). */
+  delayMs() { return linkDelay(getMission()).demoMs; }
 
   onChange(fn) { this.listeners.push(fn); }
   _emit() { this.listeners.forEach((fn) => fn()); }
@@ -48,7 +50,7 @@ export class LinkModel {
       type, crewId, body, payload: payload || null,
       mission: getMission(),
       sentAt: new Date(now).toISOString(),
-      delayMs: delay,
+      delayMs: delay, realDelayS: linkDelay(getMission()).seconds,
       deliverAt: up ? now + delay : null,
       status: up ? "inTransit" : "queued",
     };

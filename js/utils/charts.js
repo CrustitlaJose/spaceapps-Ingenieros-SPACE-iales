@@ -4,8 +4,10 @@ import { COLORS } from "./format.js";
 
 export function sparkSvg(key, values) {
   const I = INDICATORS[key], W = 160, H = 38;
+  if (!values.length) return `<svg viewBox="0 0 ${W} ${H}" aria-hidden="true"></svg>`;
   const y = (v) => H - ((Math.min(I.hi, Math.max(I.lo, v)) - I.lo) / (I.hi - I.lo)) * H;
-  const path = values.map((v, i) => (i ? "L" : "M") + ((i / (values.length - 1)) * W).toFixed(1) + " " + y(v).toFixed(1)).join(" ");
+  const pts = values.length === 1 ? [values[0], values[0]] : values; // one day: draw a flat line
+  const path = pts.map((v, i) => (i ? "L" : "M") + ((i / (pts.length - 1)) * W).toFixed(1) + " " + y(v).toFixed(1)).join(" ");
   const top = Math.min(y(I.band[1]), H), h = Math.max(0, y(I.band[0]) - y(I.band[1]));
   return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
     <rect x="0" y="${top.toFixed(1)}" width="${W}" height="${h.toFixed(1)}" fill="rgba(62,207,142,.12)"/>
@@ -28,8 +30,10 @@ export function lineChartSvg(key, days, dayLabel = "D") {
     if (i % 5 === 0 || i === n - 1) g += `<text x="${x(i)}" y="${H - 12}" text-anchor="middle" font-size="11" fill="var(--muted)" font-family="IBM Plex Mono, monospace">${dayLabel}${d.day}</text>`;
   });
   const band = `<rect x="${pl}" y="${y(I.band[1])}" width="${W - pl - pr}" height="${y(I.band[0]) - y(I.band[1])}" fill="rgba(62,207,142,.10)"/>`;
-  const line = days.map((d, i) => (i ? "L" : "M") + x(i).toFixed(1) + " " + y(d[key]).toFixed(1)).join(" ");
-  const area = line + ` L${x(n - 1).toFixed(1)} ${H - pb} L${pl} ${H - pb} Z`;
-  const pts = days.map((d, i) => `<circle cx="${x(i).toFixed(1)}" cy="${y(d[key]).toFixed(1)}" r="${i === n - 1 ? 6 : 3.2}" fill="${COLORS[I.ev(d[key])]}" stroke="var(--panel)" stroke-width="${i === n - 1 ? 2.5 : 1}"/>`).join("");
+  const have = days.map((d, i) => ({ d, i })).filter((p) => p.d[key] !== null && p.d[key] !== undefined); // skip "I don't know"
+  if (!have.length) return `${band}${g}`;
+  const line = have.map((p, k) => (k ? "L" : "M") + x(p.i).toFixed(1) + " " + y(p.d[key]).toFixed(1)).join(" ");
+  const area = line + ` L${x(have[have.length - 1].i).toFixed(1)} ${H - pb} L${x(have[0].i).toFixed(1)} ${H - pb} Z`;
+  const pts = have.map((p) => `<circle cx="${x(p.i).toFixed(1)}" cy="${y(p.d[key]).toFixed(1)}" r="${p.i === n - 1 ? 6 : 3.2}" fill="${COLORS[I.ev(p.d[key])]}" stroke="var(--panel)" stroke-width="${p.i === n - 1 ? 2.5 : 1}"/>`).join("");
   return `${band}${g}<path d="${area}" fill="rgba(79,193,192,.10)"/><path d="${line}" fill="none" stroke="var(--accent)" stroke-width="2.2"/>${pts}`;
 }

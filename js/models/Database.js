@@ -4,22 +4,25 @@
 // If IndexedDB is unavailable (private window, blocked storage) it falls back to memory.
 
 const DB_NAME = "astrovital";
-const DB_VERSION = 1;
+const DB_VERSION = 2; // v2 adds "events" (emergency log)
 const STORES = {
   crew: { keyPath: "_id", indexes: [] },
   checkins: { keyPath: "_id", indexes: ["crewId", "day"] },
   messages: { keyPath: "_id", indexes: ["direction", "status"] },
-  missions: { keyPath: "_id", indexes: ["crewId"] },
+  events: { keyPath: "_id", indexes: ["crewId"] },
 };
 
 export class Database {
-  constructor() {
+  /** options.memory = true forces the in-memory store (used by the automated tests). */
+  constructor(options = {}) {
     this.db = null;
     this.memory = null; // fallback: { store: Map }
+    this.forceMemory = !!options.memory;
   }
 
   async open() {
     try {
+      if (this.forceMemory) throw new Error("memory");
       this.db = await new Promise((resolve, reject) => {
         const req = indexedDB.open(DB_NAME, DB_VERSION);
         req.onupgradeneeded = () => {
